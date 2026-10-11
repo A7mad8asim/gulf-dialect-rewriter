@@ -1,0 +1,599 @@
+{
+  "run": {
+    "timestamp": "2026-10-11T23:10:04",
+    "subset": "fresh_dialect",
+    "n_questions": 25,
+    "repeats": 3,
+    "rewriter": "ollama:qwen3:8b",
+    "text_to_sql": "ask-the-data full pipeline, ollama:qwen3:8b"
+  },
+  "summary": {
+    "none": {
+      "correct_per_run": [
+        11,
+        11,
+        11
+      ],
+      "mean_accuracy": 0.44
+    },
+    "rewrite": {
+      "correct_per_run": [
+        12,
+        12,
+        12
+      ],
+      "mean_accuracy": 0.48
+    },
+    "reference": {
+      "correct_per_run": [
+        18,
+        18,
+        18
+      ],
+      "mean_accuracy": 0.72
+    }
+  },
+  "guard_rejected": 0,
+  "rewrite_latency_median_s": 0.41,
+  "questions_better_with_rewrite": [
+    "F08",
+    "F09",
+    "F20"
+  ],
+  "questions_worse_with_rewrite": [
+    "F04",
+    "F13"
+  ],
+  "items": [
+    {
+      "id": "F01",
+      "question": "شقد عدد المواعيد اللي كانت يوم الأحد في 2025؟",
+      "rewrite": "كم عدد المواعيد التي كانت في يوم الأحد في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F02",
+      "question": "أي عيادة عندها أكثر مواعيد قبل الساعة 9 الصبح في 2024؟",
+      "rewrite": "أي عيادة عندها أكثر مواعيد قبل الساعة 9 الصبح في عام 2024؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F03",
+      "question": "چم مريض عنده ربو مسجل عندنا؟",
+      "rewrite": "كم عدد المرضى الذين يعانون من ربو وهم مسجلون لدينا؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F04",
+      "question": "خلنا نشوف كم وحدة من الحريم سوت فحص سرطان الثدي في 2025",
+      "rewrite": "كم عدد وحدات الحريم التي أجرت فحص سرطان الثدي في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F05",
+      "question": "شنو أكثر دوا انصرف للعيال تحت 18 في 2024؟",
+      "rewrite": "ما هو المبلغ الأكثر إيراداً للعائلات تحت 18 عاماً في عام 2024؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F06",
+      "question": "كم يوم بالمعدل ينصرف الانسولين؟",
+      "rewrite": "كم يومًا بالعادي يُستهلك الانسولين؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F07",
+      "question": "بين عيادة المنطقة الصناعية وعيادة الخليج الغربي، أي وحدة نسبة الغياب فيها أعلى في 2025؟",
+      "rewrite": "ما هي الوحدة التي تمتلك نسبة غياب أعلى بين عيادة المنطقة الصناعية وعيادة الخليج الغربي في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F08",
+      "question": "كم واحد من الشيبان طلع الكوليسترول الضار عنده عالي في 2025؟",
+      "rewrite": "كم واحد من الشيبان طلع الكوليسترول الضار عنده عالي في 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "F09",
+      "question": "شكثر المتابعات اللي خلصت في وقتها في 2024؟",
+      "rewrite": "كم عدد المتابعات التي أنهت في وقتها في عام 2024؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F10",
+      "question": "قول لي كم زيارة متابعة صارت في عيادة السكري السنة اللي راحت",
+      "rewrite": "كم عدد الزيارات التالية التي تمت في عيادة السكري خلال السنة الماضية؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "F11",
+      "question": "أي شهر بـ2024 كان فيه أقل عدد زيارات؟",
+      "rewrite": "أي شهر في عام 2024 كان فيه أقل عدد زيارات؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F12",
+      "question": "كم مريض جديد سجل في عيادة الريان من بداية 2025 لين نهاية يونيو؟",
+      "rewrite": "كم عدد المرضى الجدد الذين سُجِّلوا في عيادة الريان من بداية عام 2025 إلى نهاية يونيو؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F13",
+      "question": "وش نسبة اللي كنسلوا مواعيدهم من الحجوزات اللي بالتلفون في 2023؟",
+      "rewrite": "ما نسبة المرضى الذين لم يحضروا المواعيد من الحجوزات التي تم إجراؤها عبر الهاتف في عام 2023؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F14",
+      "question": "كم معدل السكر التراكمي عند القطريين اللي عندهم سكر في 2025؟",
+      "rewrite": "ما هو معدل السكر التراكمي لدى القطريين الذين يعانون من سكر في الدم في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F15",
+      "question": "ابغى اعرف كم فحص ضغط انسوى بعيادة أم صلال في صيف 2024",
+      "rewrite": "كم عدد فحوصات ضغط الدم التي أُجريت في عيادة أم صلال في الصيف من عام 2024؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "F16",
+      "question": "يا ترى كم مريض عنده نقص فيتامين د ومسجل في عيادة الضعاين؟",
+      "rewrite": "كم عدد المرضى الذين يعانون من نقص فيتامين د وهم مسجلون في عيادة الضعاين؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "F17",
+      "question": "أي قسم الناس ينطرون فيه أكثر شي بالمعدل؟",
+      "rewrite": "أي قسم من الناس ينطرون فيه أكثر على المدى المتوسط؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F18",
+      "question": "كم ياهل تطعم في 2025، أولاد وبنات كل واحد بروحه؟",
+      "rewrite": "كم عدد المرضى الذين يُعالجون في عام 2025، ولكل فئة العمر (أولاد وبنات) بحسب كل فئة منفصلة؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F19",
+      "question": "أي جنسية تلتزم بمواعيدها أكثر شي؟",
+      "rewrite": "ما هي الجنسيات التي تلتزم بمواعيدها أكثر؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "F20",
+      "question": "شكثر مضادات حيوية انصرفت في الشتا، يعني ديسمبر ويناير وفبراير، سنة 2024؟",
+      "rewrite": "كم عدد مضادات الحيوية التي تم إصدارها في الشتاء، أي ديسمبر ويناير وفبراير، سنة 2024؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "F21",
+      "question": "الحين كم واحد عنده متابعة ما خلصت وموعدها فات؟",
+      "rewrite": "كم عدد المتابعة التي لم تُنهَ ومواعيدها منتهية؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "F22",
+      "question": "كم عيادة فيها مختبر؟",
+      "rewrite": "كم عدد العيادات التي تحتوي على مختبر؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F23",
+      "question": "أي سنة من الثلاث سنين كانت أكثر شي زيارات بالعيد؟",
+      "rewrite": "أي سنة من الثلاث سنوات كانت أكثر شي زيارات بالعيد؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F24",
+      "question": "كم واحد من باقي العرب تشخص بالسكر أول مرة في 2025؟",
+      "rewrite": "كم واحد من باقي العرب يشخص بالسكري لأول مرة في 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "F25",
+      "question": "نسبة الحضور بعيادة الأسنان في 2025 كم كانت؟",
+      "rewrite": "ما نسبة الحضور في عيادة الأسنان في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ],
+      "correct_reference": [
+        true,
+        true,
+        true
+      ]
+    }
+  ]
+}

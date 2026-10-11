@@ -3,10 +3,14 @@
 Runs with ask-the-data's Python (it imports `askdata`), from either repository:
 
     ..\\Ask-the-Data\\.venv\\Scripts\\python eval\\extrinsic.py --repeats 3
+    ..\\Ask-the-Data\\.venv\\Scripts\\python eval\\extrinsic.py --gold eval/fresh_dialect.jsonl
 
-Arms: `none` (the question as asked) and `rewrite` (the question rewritten by the model, through
-the guard; a rejected rewrite falls back to the original). Each question is rewritten once
-(temperature 0) and both arms go through ask-the-data `repeats` times, because identical runs of
+Questions come from ask-the-data's gold set (filtered by --subset) or from another JSONL file in the
+same format (--gold). Arms: `none` (the question as asked), `rewrite` (the question rewritten by
+the model, through the guard; a rejected rewrite falls back to the original) and, when the file
+gives a hand-written MSA version of each question, `reference` (that version: what a perfect
+rewriter would reach). Each question is rewritten once (temperature 0) and every arm goes through
+ask-the-data `repeats` times, because identical runs of
 ask-the-data differ by a question or two. Results go to eval/results/.
 """
 
@@ -34,6 +38,7 @@ SUBSETS = {
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--subset", choices=list(SUBSETS), default="dialect")
+    parser.add_argument("--gold", help="JSONL of questions instead of ask-the-data's gold set (e.g. eval/fresh_dialect.jsonl)")
     parser.add_argument("--model", default="qwen3:8b", help="Ollama model that rewrites")
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--label", default=None, help="name for the results file (default: the model)")
@@ -46,10 +51,16 @@ def main(argv: list[str] | None = None) -> int:
     from askdata.resources import load_gold
 
     settings = Settings.from_env()
-    gold = [g for g in load_gold() if SUBSETS[args.subset](g)]
+    if args.gold:
+        with open(args.gold, encoding="utf-8") as f:
+            gold = [json.loads(line) for line in f if line.strip()]
+        subset = Path(args.gold).stem
+    else:
+        gold = [g for g in load_gold() if SUBSETS[args.subset](g)]
+        subset = args.subset
     rewriter = OllamaRewriter(args.model, settings.ollama_base_url)
 
-    print(f"Rewriting {len(gold)} {args.subset} questions with {rewriter.name}")
+    print(f"Rewriting {len(gold)} {subset} questions with {rewriter.name}")
     rewrites = {}
     for g in gold:
         r = rewriter.rewrite(g["question"])
@@ -60,6 +71,8 @@ def main(argv: list[str] | None = None) -> int:
     db = Database(settings.db_path, settings.query_timeout_s, settings.max_rows)
     assistant = _make_assistant(settings, "full", answers=False, db=db)
     arms = {"none": gold, "rewrite": [{**g, "question": rewrites[g["id"]].text} for g in gold]}
+    if all(g.get("msa") for g in gold):
+        arms["reference"] = [{**g, "question": g["msa"]} for g in gold]
     correct: dict[str, dict[str, list[bool]]] = {arm: {g["id"]: [] for g in gold} for arm in arms}
     for rep in range(args.repeats):
         for arm, items in arms.items():
@@ -79,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     result = {
         "run": {
             "timestamp": datetime.now().isoformat(timespec="seconds"),
-            "subset": args.subset,
+            "subset": subset,
             "n_questions": n,
             "repeats": args.repeats,
             "rewriter": rewriter.name,
@@ -97,8 +110,7 @@ def main(argv: list[str] | None = None) -> int:
                 "rewrite": rewrites[g["id"]].raw,
                 "guard_accepted": rewrites[g["id"]].guard.accepted,
                 "guard_reasons": rewrites[g["id"]].guard.reasons,
-                "correct_none": correct["none"][g["id"]],
-                "correct_rewrite": correct["rewrite"][g["id"]],
+                **{f"correct_{arm}": correct[arm][g["id"]] for arm in arms},
             }
             for g in gold
         ],
@@ -106,10 +118,10 @@ def main(argv: list[str] | None = None) -> int:
     out = ROOT / "eval" / "results"
     out.mkdir(parents=True, exist_ok=True)
     label = args.label or args.model.replace(":", "-")
-    path = out / f"extrinsic_{args.subset}_{label}.json"
+    path = out / f"extrinsic_{subset}_{label}.json"
     path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    print(f"\n{args.subset}: {n} questions x {args.repeats} runs   (rewriter: {rewriter.name})")
+    print(f"\n{subset}: {n} questions x {args.repeats} runs   (rewriter: {rewriter.name})")
     for arm, s in summary.items():
         print(f"  {arm:<8} {100 * s['mean_accuracy']:5.1f}%   correct per run: {s['correct_per_run']}")
     print(f"  guard rejected {result['guard_rejected']} rewrites; better with rewrite: {gained or '-'}; worse: {lost or '-'}")

@@ -17,7 +17,7 @@ A small open model, fine-tuned with LoRA/QLoRA, that rewrites Gulf-dialect Arabi
 ## Plan
 
 1. **Data.** Public Gulf-dialect ↔ MSA parallel text (see [Data](#data)), fetched by `gdr fetch` and never committed, plus clinic-domain pairs from a seeded generator (`gdr clinic`). Every pair goes through the leakage check ([`leakage.py`](src/gdr/leakage.py)) against ask-the-data's gold set, so no test question (or a near-duplicate of one) reaches training.
-2. **Baselines.** No rewrite, a prompted (not fine-tuned) base model (done, [below](#baseline-prompted-qwen3-8b-not-fine-tuned)), and the fine-tuned model, all through the same guard.
+2. **Baselines.** No rewrite, a prompted (not fine-tuned) base model, a hand-written MSA reference as the ceiling, and the fine-tuned model, all through the same guard. Done so far: [ask-the-data's 19](#baseline-prompted-qwen3-8b-not-fine-tuned) and the [fresh 25](#fresh-dialect-test-set).
 3. **Fine-tuning.** QLoRA on a small Qwen model on one RTX 5060 Ti (16 GB).
 4. **Evaluation.**
    - Intrinsic: chrF / BLEU against reference MSA on a held-out split, plus the guard's rejection rate.
@@ -40,6 +40,26 @@ The rewrite fixes 2 questions and breaks 2, so the net effect is zero. The guard
 - **Room to improve:** 8 questions fail without a rewrite. The English twins of G06 and G45 fail as well, so dialect isn't their problem. That leaves 6 failures a better rewriter could fix: G12, G14, G28, G36, G39, G48. The prompted model fixed 2 of them.
 
 The no-rewrite arm scores 57.9% (11 of 19), against the 63.2% (12 of 19) in Ask-the-Data's README from 7 Oct. G28 was right then and is wrong now. The 3 runs here were identical, but single questions still move between days, so compare arms on paired runs, as here.
+
+## Fresh dialect test set
+
+[`eval/fresh_dialect.jsonl`](eval/fresh_dialect.jsonl) holds 25 new Gulf-dialect clinic questions. Each has gold SQL checked against ask-the-data's database and a hand-written MSA reference. **Claude wrote them, not a native speaker**, after designing the generator and seeing ask-the-data's gold questions. That makes it a weaker check than an independent set, though it was built to differ from both:
+- **Other question types:** weekday, time of day, asthma, LDL, overdue follow-ups, winter antibiotics, first diagnosis, labs per clinic, two-clinic comparisons.
+- **Other Gulf wordings:** چم, شقد, ابغى, خلنا نشوف, اللي راحت, ياهل, تلتزم بمواعيدها.
+
+A test keeps every question away from the generator's output and away from ask-the-data's gold questions. Each "which ..." question was checked to have a clear winner, not a near-tie.
+
+Results on 11 Oct 2026, 3 runs per arm:
+
+| Arm | Correct (each of 3 runs) | Accuracy |
+|---|---|---|
+| No rewrite | 11 · 11 · 11 | 44.0% |
+| Prompted Qwen3-8B rewrite | 12 · 12 · 12 | 48.0% |
+| Hand-written MSA reference (a perfect rewriter) | 18 · 18 · 18 | **72.0%** |
+
+- **Ceiling:** a perfect rewrite into MSA would lift ask-the-data from 44% to 72% on these questions. That gap is what fine-tuning aims at.
+- **The prompted model often changes the meaning:** كنسلوا (cancelled) became لم يحضروا (did not show up) in F13. دوا انصرف للعيال ("medicine prescribed to children") became "the highest-revenue amount for families" in F05. كم وحدة من الحريم ("how many women") became "how many units of women" in F04. F02 and F08 came back still in dialect. The guard rejected none of these, because no number or term changed. Its checks stop numbers from changing but can't catch a change in meaning.
+- **Noise:** F08's rewrite is character-for-character the original question. Yet it failed in all 3 no-rewrite runs and passed in all 3 rewrite runs. Each arm repeats perfectly, but the same text can still flip between arms, so a difference of 1–2 questions is noise. The +1 for the prompted model is within it. The +7 for the reference is not.
 
 ## Data
 
@@ -71,7 +91,12 @@ pip install -e ".[dev]"
 pytest
 ```
 
-Training needs the `train` extra (`pip install -e ".[train]"`) and a CUDA build of PyTorch.
+Training needs a CUDA build of PyTorch and the `train` extra. Tested on Windows 11 with an RTX 5060 Ti 16 GB (Blackwell, which needs CUDA 12.8 or later), torch 2.11.0+cu128, transformers 5.19, peft 0.21, trl 1.15 and bitsandbytes 0.50 (4-bit NF4 with bf16 compute works):
+
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cu128
+pip install -e ".[train]"
+```
 
 ```bash
 pip install -e ".[data]"
