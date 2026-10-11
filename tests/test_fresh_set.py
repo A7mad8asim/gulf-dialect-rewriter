@@ -4,7 +4,7 @@ ask-the-data's database by eval/extrinsic.py, which needs that repository)."""
 import json
 from pathlib import Path
 
-from gdr.clinic import generate
+from gdr.cli import main
 from gdr.guard import check
 from gdr.leakage import LeakageChecker
 
@@ -28,6 +28,12 @@ def test_reference_msa_respects_the_design_rule():
     assert all(check(i["question"], i["msa"]).accepted for i in _items())
 
 
-def test_no_question_is_close_to_generated_training_questions():
-    checker = LeakageChecker([p["source"] for p in generate(3000, seed=13)])
-    assert not [i["id"] for i in _items() if checker.leaks(i["question"])]
+def test_clinic_build_drops_pairs_close_to_the_fresh_set(tmp_path):
+    # The generator was expanded after the fresh set was written, so `gdr clinic` must hold it out
+    held = tmp_path / "gold.jsonl"
+    held.write_text(json.dumps({"question": "placeholder"}), encoding="utf-8")
+    assert main(["clinic", "--n", "6000", "--data-dir", str(tmp_path), "--held-out", str(held)]) == 0
+    checker = LeakageChecker([i["question"] for i in _items()])
+    kept = [json.loads(line)["source"] for name in ("clinic_train.jsonl", "clinic_dev.jsonl")
+            for line in (tmp_path / "pairs" / name).read_text(encoding="utf-8").splitlines()]
+    assert kept and not [s for s in kept if checker.leaks(s)]

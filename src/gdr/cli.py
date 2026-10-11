@@ -12,6 +12,7 @@ from .leakage import LeakageChecker, load_questions
 
 # ask-the-data's gold set, when the two projects sit side by side (Desktop\Ask-the-Data)
 DEFAULT_HELD_OUT = Path(__file__).resolve().parents[3] / "Ask-the-Data" / "eval" / "gold.jsonl"
+FRESH_SET = Path(__file__).resolve().parents[2] / "eval" / "fresh_dialect.jsonl"
 
 
 def _held_out(args: argparse.Namespace) -> list[str] | None:
@@ -44,6 +45,9 @@ def _clinic(args: argparse.Namespace) -> int:
     held_out = _held_out(args)
     if held_out is None:
         return 1
+    # The fresh test set is held out too: the generator was expanded after those questions were written
+    held_out = held_out + load_questions(FRESH_SET)
+    print(f"Plus {FRESH_SET.name}: {len(held_out)} held-out questions in all")
     print(json.dumps(build_clinic(Path(args.data_dir), held_out, args.n, args.seed), indent=2, ensure_ascii=False))
     return 0
 
@@ -99,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_fetch)
 
     p = sub.add_parser("clinic", help="generate clinic-question pairs into data/pairs/clinic_*.jsonl")
-    p.add_argument("--n", type=int, default=3000)
+    p.add_argument("--n", type=int, default=6000)
     p.add_argument("--seed", type=int, default=13)
     p.add_argument("--data-dir", default="data")
     p.add_argument("--held-out", help=f"JSONL with a 'question' field (default: {DEFAULT_HELD_OUT})")
