@@ -1,0 +1,57 @@
+"""Command line: gdr check-leakage | guard."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+
+from .guard import check
+from .leakage import LeakageChecker, load_questions
+
+
+def _check_leakage(args: argparse.Namespace) -> int:
+    checker = LeakageChecker(load_questions(args.held_out))
+    with open(args.pairs, encoding="utf-8") as f:
+        pairs = [json.loads(line) for line in f if line.strip()]
+    kept, dropped = checker.filter_pairs(pairs)
+    print(f"{len(pairs)} pairs: {len(kept)} kept, {len(dropped)} overlap the held-out questions")
+    for p in dropped[: args.show]:
+        print(f"  dropped: {p['source']}")
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as f:
+            for p in kept:
+                f.write(json.dumps(p, ensure_ascii=False) + "\n")
+    return 0
+
+
+def _guard(args: argparse.Namespace) -> int:
+    result = check(args.question, args.rewrite)
+    print(json.dumps({"text": result.text, "accepted": result.accepted, "reasons": result.reasons}, ensure_ascii=False))
+    return 0 if result.accepted else 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    parser = argparse.ArgumentParser(prog="gdr", description=__doc__)
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    p = sub.add_parser("check-leakage", help="drop training pairs that overlap held-out questions")
+    p.add_argument("pairs", help="training pairs, JSONL with 'source' and 'target'")
+    p.add_argument("--held-out", required=True, help="JSONL with a 'question' field (e.g. ask-the-data's eval/gold.jsonl)")
+    p.add_argument("--out", help="write the kept pairs here")
+    p.add_argument("--show", type=int, default=10)
+    p.set_defaults(func=_check_leakage)
+
+    p = sub.add_parser("guard", help="check one rewrite against the design rule")
+    p.add_argument("question")
+    p.add_argument("rewrite")
+    p.set_defaults(func=_guard)
+
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

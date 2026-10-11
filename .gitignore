@@ -1,0 +1,22 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+.env
+.claude/
+
+# Corpora, checkpoints and adapters are rebuilt by scripts or published on Hugging Face, never committed
+data/
+checkpoints/
+outputs/
+models/
+wandb/
+
+# Keep the summary results; ignore individual timestamped runs
+eval/results/*
+!eval/results/latest.json
+!eval/results/ablation.md
