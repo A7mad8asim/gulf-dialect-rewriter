@@ -48,6 +48,14 @@ def _clinic(args: argparse.Namespace) -> int:
     return 0
 
 
+def _train(args: argparse.Namespace) -> int:
+    from .train import TrainConfig, train
+
+    overrides = {k: v for k, v in vars(args).items() if k not in ("command", "func") and v is not None}
+    train(TrainConfig(**overrides))
+    return 0
+
+
 def _check_leakage(args: argparse.Namespace) -> int:
     checker = LeakageChecker(load_questions(args.held_out))
     with open(args.pairs, encoding="utf-8") as f:
@@ -87,6 +95,18 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--data-dir", default="data")
     p.add_argument("--held-out", help=f"JSONL with a 'question' field (default: {DEFAULT_HELD_OUT})")
     p.set_defaults(func=_clinic)
+
+    p = sub.add_parser("train", help="QLoRA fine-tuning (needs the train extra and a CUDA GPU)")
+    p.add_argument("--model", help="Hugging Face model id (default: Qwen/Qwen3-1.7B)")
+    p.add_argument("--name", help="run name, the folder under outputs/")
+    p.add_argument("--open-only", action="store_const", const=True, help="only openly licensed pairs (no Dial2MSA)")
+    p.add_argument("--epochs", type=float)
+    p.add_argument("--max-steps", type=int, help="stop after N steps (smoke test)")
+    p.add_argument("--learning-rate", type=float)
+    p.add_argument("--batch-size", type=int)
+    p.add_argument("--lora-r", type=int)
+    p.add_argument("--eval-every", type=int)
+    p.set_defaults(func=_train)
 
     p = sub.add_parser("check-leakage", help="drop training pairs that overlap held-out questions")
     p.add_argument("pairs", help="training pairs, JSONL with 'source' and 'target'")

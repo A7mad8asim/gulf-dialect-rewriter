@@ -91,11 +91,14 @@ pip install -e ".[dev]"
 pytest
 ```
 
-Training needs a CUDA build of PyTorch and the `train` extra. Tested on Windows 11 with an RTX 5060 Ti 16 GB (Blackwell, which needs CUDA 12.8 or later), torch 2.11.0+cu128, transformers 5.19, peft 0.21, trl 1.15 and bitsandbytes 0.50 (4-bit NF4 with bf16 compute works):
+Training needs a CUDA build of PyTorch and the `train` extra. Tested on Windows 11 with an RTX 5060 Ti 16 GB (Blackwell, which needs CUDA 12.8 or later), torch 2.11.0+cu128, transformers 5.19, peft 0.21 and bitsandbytes 0.50 (4-bit NF4 with bf16 compute works). Training uses the plain transformers `Trainer` with its own masking ([`train.py`](src/gdr/train.py)). TRL's SFT trainer needs Triton for its fused loss, and Triton ships with PyTorch on Linux only:
 
 ```bash
 pip install torch --index-url https://download.pytorch.org/whl/cu128
 pip install -e ".[train]"
+gdr train --max-steps 20 --name smoke   # check masking, losses, saving and sample rewrites in about 2 minutes
+gdr train                               # Qwen3-1.7B, 4-bit QLoRA, all training pairs, 2 epochs
+gdr train --open-only --name qwen3-1.7b-open   # openly licensed pairs only
 ```
 
 ```bash

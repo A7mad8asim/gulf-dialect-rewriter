@@ -13,9 +13,7 @@ data = ["py7zr>=0.22", "openpyxl>=3.1"]
 train = [
   "torch>=2.7",
   "transformers>=4.50",
-  "datasets>=3.0",
   "peft>=0.15",
-  "trl>=0.17",
   "accelerate>=1.5",
   "bitsandbytes>=0.45",
 ]
