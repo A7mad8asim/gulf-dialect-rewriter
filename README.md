@@ -33,7 +33,7 @@ Ask-the-Data's 19 Gulf-dialect questions, each run 3 times through its full pipe
 | No rewrite | 11 · 11 · 11 | 57.9% |
 | Prompted Qwen3-8B rewrite | 11 · 11 · 11 | 57.9% |
 
-The rewrite fixes 2 questions and breaks 2, so the net effect is zero. The guard rejected none of the 19 rewrites, and a rewrite takes about 0.5 s.
+The rewrite fixes 2 questions and breaks 2, so the net effect is zero. The guard rejected none of the 19 rewrites, and the median rewrite takes 0.38 s.
 
 - **Fixed:** G12 (انحجز فيها أكثر شي → أكبر عدد من المواعيد) and G28 (انحجز عن طريق التطبيق).
 - **Broken:** G26 changes the meaning. مريض ضغط ("hypertension patient") became المرضى الذين تم تسجيل ضغطهم ("patients whose blood pressure was recorded"). The guard can't catch this, because no number or term changed. G31's rewrite is faithful (كم معدل → ما هو معدل), but the SQL model then got it wrong.
