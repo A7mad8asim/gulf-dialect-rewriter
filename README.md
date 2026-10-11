@@ -24,6 +24,23 @@ A small open model, fine-tuned with LoRA/QLoRA, that rewrites Gulf-dialect Arabi
    - Extrinsic: ask-the-data's accuracy on its 19 Gulf-dialect questions before and after, and on the MSA questions to check nothing gets worse.
 5. **Release.** Adapter weights and a model card on Hugging Face, a dataset card for the processed pairs (where the source licences allow), linked from here.
 
+## First fine-tuned model: Qwen3-1.7B, QLoRA
+
+`gdr train` defaults: 4-bit NF4 base, LoRA r=16 on all linear layers (17.4 M trainable parameters, 1% of the model), 2 epochs over 11,816 pairs (Dial2MSA + STS Saudi + clinic). Training took 47 minutes on the RTX 5060 Ti, peaking at 11.3 GB. Dev loss fell from 0.48 to 0.385 and flattened over the last epoch. The rewrites come from `gdr rewrite-file` and are scored with `eval/extrinsic.py --rewrites`, 3 runs per arm, on 12 Oct 2026:
+
+| Test set | No rewrite | Prompted Qwen3-8B | **Fine-tuned Qwen3-1.7B** | MSA reference |
+|---|---|---|---|---|
+| ask-the-data's 19 dialect questions | 57.9% | 57.9% | **73.7%** (+3, none lost) | n/a |
+| Fresh 25 dialect questions | 44.0% | 48.0% | **40.0%** (+4, −5) | 72–76% |
+
+**The fine-tuned model fixes clinic questions it was trained on, but it doesn't generalize yet.**
+
+- **ask-the-data's 19 questions:** it fixes 3 of the 6 that a better rewrite could fix (G12, G14, G28) and breaks none. It also corrects the prompted model's G26 mistake: مريض ضغط → مرضى ارتفاع ضغط الدم. These questions are close to what the clinic generator produces, though: the generator draws on the same glossary, and Claude had seen the questions before writing it. So this result is optimistic.
+- **The fresh 25:** questions outside the generator's templates bring out confident meaning changes. Sunday became "weekend" (F01), asthma became "lung cancer" (F03), and "days of insulin supplied" became "days between visits" (F06). F05, F16 and F18 came out as nonsense. The guard rejected none of them, because no number or term changed. Net −1 is within noise, but the meaning changes are real.
+- **Noise:** the reference arm scored 18 one day and 19 the next with identical text, so judge arms on the per-question tables in `eval/results/` as well as on totals.
+
+What to try next: more varied clinic training questions (more measures, filters and wordings), the 8B base, which knows more Arabic, and a check that catches meaning changes and not only lost numbers.
+
 ## Baseline: prompted Qwen3-8B, not fine-tuned
 
 Ask-the-Data's 19 Gulf-dialect questions, each run 3 times through its full pipeline (Qwen3-8B writes the SQL). In the rewrite arm, the same Qwen3-8B first rewrites each question into MSA with a fixed prompt ([`rewrite.py`](src/gdr/rewrite.py)), behind the guard. Measured on 11 Oct 2026 with [`eval/extrinsic.py`](eval/extrinsic.py):

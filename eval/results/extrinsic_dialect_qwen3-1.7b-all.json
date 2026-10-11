@@ -1,0 +1,361 @@
+{
+  "run": {
+    "timestamp": "2026-10-12T00:20:40",
+    "subset": "dialect",
+    "n_questions": 19,
+    "repeats": 3,
+    "rewriter": "adapter:qwen3-1.7b-all",
+    "text_to_sql": "ask-the-data full pipeline, ollama:qwen3:8b"
+  },
+  "summary": {
+    "none": {
+      "correct_per_run": [
+        11,
+        11,
+        11
+      ],
+      "mean_accuracy": 0.5789
+    },
+    "rewrite": {
+      "correct_per_run": [
+        14,
+        14,
+        14
+      ],
+      "mean_accuracy": 0.7368
+    }
+  },
+  "guard_rejected": 0,
+  "rewrite_latency_median_s": 1.17,
+  "questions_better_with_rewrite": [
+    "G12-ar",
+    "G14-ar",
+    "G28-ar"
+  ],
+  "questions_worse_with_rewrite": [],
+  "items": [
+    {
+      "id": "G02-ar",
+      "question": "كم موعد كان عندنا في 2024؟",
+      "rewrite": "كم عدد المواعيد في عام 2024؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G04-ar",
+      "question": "كم مريض عندنا من كل جنسية؟",
+      "rewrite": "كم عدد المرضى المسجلين حسب الجنسية؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G06-ar",
+      "question": "كم زيارة صارت في عيادة السكري في 2023؟",
+      "rewrite": "كم عدد الزيارات في عيادة السكري في عام 2023؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G09-ar",
+      "question": "كم موعد تكنسل في كل شهر من 2025؟",
+      "rewrite": "كم عدد المواعيد الملغاة في عام 2025 حسب الشهر؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G12-ar",
+      "question": "أي طريقة حجز انحجز فيها أكثر شي مواعيد في 2025؟ وكم موعد؟",
+      "rewrite": "أي طريقة حجز كان فيها أكبر عدد من المواعيد في عام 2025؟ وكم عدد المواعيد؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G14-ar",
+      "question": "كم نسبة تحاليل فيتامين د اللي طلع فيها نقص في 2025؟",
+      "rewrite": "ما نسبة إجراء تحليل فيتامين د المُسَمَّ بـ \"نقص\" في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G17-ar",
+      "question": "كم مريض مختلف زار كل قسم في 2024؟",
+      "rewrite": "كم عدد المرضى المختلفين الذين حضروا في عام 2024 حسب القسم؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G19-ar",
+      "question": "كم كانت نسبة الغياب عن المواعيد في رمضان 2025؟",
+      "rewrite": "ما نسبة عدم الحضور إلى المواعيد خلال شهر رمضان 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G22-ar",
+      "question": "كم واحد طلع عنده نقص فيتامين د في 2024، رجال وحريم؟",
+      "rewrite": "كم عدد المرضى الذين ظهر لديهم نقص في فيتامين د في عام 2024 حسب الجنس؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G26-ar",
+      "question": "كم مريض ضغط مسجل في كل عيادة؟",
+      "rewrite": "كم عدد مرضى ارتفاع ضغط الدم المسجلين حسب العيادة؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G28-ar",
+      "question": "كم موعد انحجز عن طريق التطبيق في كل سنة؟",
+      "rewrite": "كم عدد المواعيد عن طريق التطبيق حسب السنة؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G31-ar",
+      "question": "كم معدل فيتامين د لكل جنسية في 2025؟",
+      "rewrite": "ما متوسط نتيجة فيتامين د في عام 2025 حسب الجنسية؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G33-ar",
+      "question": "كم كانت نسبة الغياب في صيف 2025؟",
+      "rewrite": "ما نسبة عدم الحضور إلى المواعيد خلال صيف 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G36-ar",
+      "question": "من مرضى السكر اللي سوّوا تحليل السكر التراكمي في 2025، كم نسبة اللي آخر نتيجة لهم أقل من 7؟",
+      "rewrite": "من مرضى السكري الذين أجروا تحليل السكر التراكمي في عام 2025، ما نسبة عدد المرضى الذين أظهرت نتائجهم أقل من 7؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G39-ar",
+      "question": "أي عيادة زادت فيها نسبة الغياب أكثر شي في رمضان 2025 مقارنة بشهر فبراير 2025؟ وكم الزيادة بالنقاط المئوية؟",
+      "rewrite": "أي عيادة كان فيها أعلى نسبة عدم حضور خلال شهر رمضان 2025 مقارنة بشهر فبراير 2025؟ وكم الزيادة في نقاط الزيادة المئوية؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G42-ar",
+      "question": "أي شهر في 2025 كانت فيه نسبة الغياب أعلى شي؟ وكم كانت؟",
+      "rewrite": "أي شهر في عام 2025 كان فيه أعلى نسبة عدم حضور؟ ما نسبة عدم الحضور؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G45-ar",
+      "question": "من المرضى اللي طلع عندهم نقص فيتامين د في 2025، كم نسبة اللي انصرف لهم مكملات فيتامين د في نفس السنة؟",
+      "rewrite": "من المرضى الذين ظهر لديهم نقص في فيتامين د في عام 2025، ما نسبة الذين وُصف لهم مكملات فيتامين د في نفس العام؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G48-ar",
+      "question": "أي جنسية عندها أقل نسبة إكمال للمتابعات المستحقة في 2025؟ وكم النسبة؟",
+      "rewrite": "أي جنسية كان عندها أقل نسبة إكمال للمتابعات المستحقة في عام 2025 وكم نسبة ذلك؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G50-ar",
+      "question": "كم مريض عنده سكر وضغط مع بعض، حسب الفئة العمرية؟",
+      "rewrite": "كم عدد مرضى السكري وال高血压 المسالك المزدوجة حسب الفئة العمرية؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    }
+  ]
+}

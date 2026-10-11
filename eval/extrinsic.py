@@ -26,7 +26,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from gdr.rewrite import OllamaRewriter  # noqa: E402
+from gdr.guard import check  # noqa: E402
+from gdr.rewrite import OllamaRewriter, Rewrite  # noqa: E402
 
 SUBSETS = {
     "dialect": lambda g: g["lang"] == "ar" and g["dialect"],
@@ -42,6 +43,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model", default="qwen3:8b", help="Ollama model that rewrites")
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--label", default=None, help="name for the results file (default: the model)")
+    parser.add_argument("--rewrites", help="JSON from `gdr rewrite-file` (e.g. a fine-tuned adapter) instead of asking Ollama")
     args = parser.parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -58,12 +60,24 @@ def main(argv: list[str] | None = None) -> int:
     else:
         gold = [g for g in load_gold() if SUBSETS[args.subset](g)]
         subset = args.subset
-    rewriter = OllamaRewriter(args.model, settings.ollama_base_url)
+    if args.rewrites:
+        saved = json.loads(Path(args.rewrites).read_text(encoding="utf-8"))
+        rewriter_name, by_id = saved["rewriter"], {r["id"]: r for r in saved["rows"]}
+        missing = [g["id"] for g in gold if g["id"] not in by_id or by_id[g["id"]]["question"] != g["question"]]
+        if missing:
+            sys.exit(f"{args.rewrites} has no matching rewrite for: {', '.join(missing)}")
+    else:
+        rewriter = OllamaRewriter(args.model, settings.ollama_base_url)
+        rewriter_name = rewriter.name
 
-    print(f"Rewriting {len(gold)} {subset} questions with {rewriter.name}")
+    print(f"Rewriting {len(gold)} {subset} questions with {rewriter_name}")
     rewrites = {}
     for g in gold:
-        r = rewriter.rewrite(g["question"])
+        if args.rewrites:
+            row = by_id[g["id"]]
+            r = Rewrite(g["question"], row["rewrite"], check(g["question"], row["rewrite"]), row["latency_s"])
+        else:
+            r = rewriter.rewrite(g["question"])
         rewrites[g["id"]] = r
         mark = "ok " if r.guard.accepted else "REJ"
         print(f"  {mark} {g['id']:<7} {g['question']}\n      -> {r.raw}" + ("" if r.guard.accepted else f"   [{'; '.join(r.guard.reasons)}]"))
@@ -95,7 +109,7 @@ def main(argv: list[str] | None = None) -> int:
             "subset": subset,
             "n_questions": n,
             "repeats": args.repeats,
-            "rewriter": rewriter.name,
+            "rewriter": rewriter_name,
             "text_to_sql": f"ask-the-data full pipeline, {settings.llm_provider}:{settings.llm_model}",
         },
         "summary": summary,
@@ -117,11 +131,11 @@ def main(argv: list[str] | None = None) -> int:
     }
     out = ROOT / "eval" / "results"
     out.mkdir(parents=True, exist_ok=True)
-    label = args.label or args.model.replace(":", "-")
+    label = args.label or (rewriter_name.split(":", 1)[1] if args.rewrites else args.model).replace(":", "-")
     path = out / f"extrinsic_{subset}_{label}.json"
     path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    print(f"\n{subset}: {n} questions x {args.repeats} runs   (rewriter: {rewriter.name})")
+    print(f"\n{subset}: {n} questions x {args.repeats} runs   (rewriter: {rewriter_name})")
     for arm, s in summary.items():
         print(f"  {arm:<8} {100 * s['mean_accuracy']:5.1f}%   correct per run: {s['correct_per_run']}")
     print(f"  guard rejected {result['guard_rejected']} rewrites; better with rewrite: {gained or '-'}; worse: {lost or '-'}")

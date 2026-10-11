@@ -56,6 +56,15 @@ def _train(args: argparse.Namespace) -> int:
     return 0
 
 
+def _rewrite_file(args: argparse.Namespace) -> int:
+    from .rewrite import AdapterRewriter, OllamaRewriter, rewrite_file
+
+    rewriter = AdapterRewriter(args.adapter) if args.adapter else OllamaRewriter(args.ollama_model)
+    rows = rewrite_file(rewriter, args.questions, args.out, dialect_only=args.dialect_only)
+    print(f"{len(rows)} rewrites by {rewriter.name} -> {args.out}")
+    return 0
+
+
 def _check_leakage(args: argparse.Namespace) -> int:
     checker = LeakageChecker(load_questions(args.held_out))
     with open(args.pairs, encoding="utf-8") as f:
@@ -107,6 +116,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--lora-r", type=int)
     p.add_argument("--eval-every", type=int)
     p.set_defaults(func=_train)
+
+    p = sub.add_parser("rewrite-file", help="rewrite every question of a JSONL file (for eval/extrinsic.py --rewrites)")
+    p.add_argument("questions", help="JSONL with id and question (ask-the-data's gold set, eval/fresh_dialect.jsonl ...)")
+    p.add_argument("--out", required=True)
+    p.add_argument("--adapter", help="outputs/<run>/adapter from gdr train")
+    p.add_argument("--ollama-model", default="qwen3:8b", help="used when no --adapter is given")
+    p.add_argument("--dialect-only", action="store_true", help="keep only Arabic questions marked as dialect")
+    p.set_defaults(func=_rewrite_file)
 
     p = sub.add_parser("check-leakage", help="drop training pairs that overlap held-out questions")
     p.add_argument("pairs", help="training pairs, JSONL with 'source' and 'target'")

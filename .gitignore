@@ -22,3 +22,4 @@ eval/results/*
 !eval/results/ablation.md
 !eval/results/extrinsic_*.json
 *.log
+!eval/results/rewrites_*.json
