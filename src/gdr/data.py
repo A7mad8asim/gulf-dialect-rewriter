@@ -1,0 +1,208 @@
+"""Fetch and prepare the Gulf-dialect ↔ MSA training data.
+
+Two public sources, downloaded into data/raw (never committed) and written as JSONL pairs:
+
+- Dial2MSA-Verified, Gulf portion (Khered et al., WACL 2025): tweets with human-verified MSA
+  translations. Research use only, no licence file, so it is never redistributed.
+- Arabic STS, Saudi translations (Al Sulaiman et al., PLOS ONE 2022, supporting file S1):
+  MSA sentences translated into Saudi dialect by people. CC BY 4.0.
+
+Training and dev pairs pass two filters: the content guard (a reference that drops or adds a number
+or Latin term would teach the model to break the design rule) and the leakage check against the
+downstream test questions and the Dial2MSA test tweets.
+"""
+
+from __future__ import annotations
+
+import csv
+import io
+import json
+import urllib.request
+import zipfile
+from dataclasses import dataclass
+from pathlib import Path
+
+from .guard import check
+from .leakage import LeakageChecker
+from .text import normalize
+
+DIAL2MSA = "https://raw.githubusercontent.com/khered20/Dial2MSA-Verified/main"
+DIAL2MSA_FILES = {
+    "glf_train.csv": f"{DIAL2MSA}/train/glf_train.csv",
+    "glf_dev.csv": f"{DIAL2MSA}/dev/glf_dev.csv",
+    "test.7z": f"{DIAL2MSA}/test.7z",
+}
+STS_URL = "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0272991.s001"
+STS_FILE = "arabic_sts_s1.zip"
+STS_TRAIN_SHEET = ("Data/Translations to Saudi Arabic.xlsx", "الترجمة السعودية")
+STS_TEST_SHEET = "Data/Translation to Saudi Arabic-test.xlsx"
+
+LICENCES = {
+    "dial2msa": "research use only (Dial2MSA-Verified; not redistributed)",
+    "sts_saudi": "CC BY 4.0 (Al Sulaiman et al., PLOS ONE 2022)",
+}
+MAX_WORDS = 60  # a few spreadsheet cells hold whole paragraphs; they are not sentence pairs
+
+
+@dataclass
+class Pair:
+    source: str  # Gulf dialect
+    target: str  # MSA
+    corpus: str
+    id: str
+
+    def to_json(self) -> dict:
+        return {
+            "id": self.id,
+            "source": self.source,
+            "target": self.target,
+            "corpus": self.corpus,
+            "licence": LICENCES[self.corpus],
+            "open_licence": self.corpus != "dial2msa",
+        }
+
+
+def _clean(text) -> str:
+    return " ".join(str(text or "").replace("​", " ").split())
+
+
+def _usable(source: str, target: str, raw_source: str = "", raw_target: str = "") -> bool:
+    if not source or not target or "\n" in (raw_source + raw_target):
+        return False
+    return len(source.split()) <= MAX_WORDS and len(target.split()) <= MAX_WORDS
+
+
+def parse_dial2msa_csv(text: str, split: str) -> list[Pair]:
+    """Rows of id, msa_verified, tweet, cleanedtweet2; a tweet with several references gives several pairs."""
+    pairs = []
+    for i, row in enumerate(csv.DictReader(io.StringIO(text))):
+        src, tgt = _clean(row["cleanedtweet2"]), _clean(row["msa_verified"])
+        if _usable(src, tgt):
+            pairs.append(Pair(src, tgt, "dial2msa", f"d2m-{split}-{i}"))
+    return pairs
+
+
+def parse_dial2msa_test(sources: list[str], references: list[list[str]]) -> list[dict]:
+    """Line-aligned cleaned tweets and reference files -> one item per tweet with all its references."""
+    assert all(len(r) == len(sources) for r in references), "test files are not line-aligned"
+    items = []
+    for i, src in enumerate(sources):
+        refs = [_clean(r[i]) for r in references if _clean(r[i])]
+        if _clean(src) and refs:
+            items.append({"id": f"d2m-test-{i}", "source": _clean(src), "references": refs})
+    return items
+
+
+def parse_sts_rows(rows: list[tuple], first: int) -> list[Pair]:
+    """STS sheets hold two sentences per row, each as (MSA, Saudi) in adjacent columns from `first`."""
+    pairs = []
+    for i, row in enumerate(rows):
+        for j, col in enumerate((first, first + 2)):
+            msa, saudi = (row[col] if len(row) > col else None), (row[col + 1] if len(row) > col + 1 else None)
+            if _usable(_clean(saudi), _clean(msa), str(saudi or ""), str(msa or "")):
+                pairs.append(Pair(_clean(saudi), _clean(msa), "sts_saudi", f"sts-{first}-{i}-{j}"))
+    return pairs
+
+
+def dedupe(pairs: list[Pair]) -> list[Pair]:
+    seen, out = set(), []
+    for p in pairs:
+        key = (normalize(p.source), normalize(p.target))
+        if key not in seen:
+            seen.add(key)
+            out.append(p)
+    return out
+
+
+def filter_pairs(pairs: list[Pair], checker: LeakageChecker | None) -> tuple[list[Pair], list[dict]]:
+    """Keep pairs whose reference respects the design rule and that do not overlap held-out text."""
+    kept, rejected = [], []
+    for p in pairs:
+        result = check(p.source, p.target)
+        if not result.accepted:
+            rejected.append({**p.to_json(), "reason": "guard: " + "; ".join(result.reasons)})
+        elif checker and (checker.leaks(p.source) or checker.leaks(p.target)):
+            rejected.append({**p.to_json(), "reason": "overlaps held-out text"})
+        else:
+            kept.append(p)
+    return kept, rejected
+
+
+# --- downloading and reading the raw files -------------------------------------------------------
+
+def download(url: str, dest: Path, refresh: bool = False) -> Path:
+    if dest.exists() and not refresh:
+        return dest
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    req = urllib.request.Request(url, headers={"User-Agent": "gulf-dialect-rewriter"})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        data = r.read()
+    dest.write_bytes(data)
+    print(f"  downloaded {dest.name} ({len(data) / 1e6:.1f} MB)")
+    return dest
+
+
+def _read_dial2msa_test(archive: Path) -> list[dict]:
+    import py7zr  # in the `data` extra
+
+    names = ["test/glf/cln_tweet_glf_ts.txt"] + [f"test/glf/gold_msa_glf_ts{k}.txt" for k in (1, 2, 3)]
+    out = archive.parent / "dial2msa_test"
+    if not all((out / n).exists() for n in names):
+        with py7zr.SevenZipFile(archive) as z:
+            z.extract(path=out, targets=names)
+    sources, *references = [(out / n).read_text(encoding="utf-8-sig").splitlines() for n in names]
+    return parse_dial2msa_test(sources, references)
+
+
+def _read_sts(zip_path: Path) -> list[Pair]:
+    import openpyxl  # in the `data` extra
+
+    z = zipfile.ZipFile(zip_path)
+    name, sheet = STS_TRAIN_SHEET
+    rows = list(openpyxl.load_workbook(io.BytesIO(z.read(name)), read_only=True)[sheet].iter_rows(values_only=True))
+    pairs = parse_sts_rows(rows[1:], first=0)  # MSA, Saudi, MSA, Saudi
+    rows = list(openpyxl.load_workbook(io.BytesIO(z.read(STS_TEST_SHEET)), read_only=True).worksheets[0].iter_rows(values_only=True))
+    return pairs + parse_sts_rows(rows[1:], first=1)  # score, MSA, Saudi, MSA, Saudi
+
+
+def _write_jsonl(path: Path, records: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        for r in records:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+
+def fetch(data_dir: Path, held_out: list[str] | None, refresh: bool = False) -> dict:
+    raw, out = data_dir / "raw", data_dir / "pairs"
+    for name, url in DIAL2MSA_FILES.items():
+        download(url, raw / name, refresh)
+    download(STS_URL, raw / STS_FILE, refresh)
+
+    test = _read_dial2msa_test(raw / "test.7z")
+    train = dedupe(
+        parse_dial2msa_csv((raw / "glf_train.csv").read_text(encoding="utf-8-sig"), "train") + _read_sts(raw / STS_FILE)
+    )
+    dev = dedupe(parse_dial2msa_csv((raw / "glf_dev.csv").read_text(encoding="utf-8-sig"), "dev"))
+
+    # The downstream questions and the Dial2MSA test tweets must not reach training or model selection
+    checker = LeakageChecker((held_out or []) + [t["source"] for t in test])
+    train_kept, train_rejected = filter_pairs(train, checker)
+    dev_kept, dev_rejected = filter_pairs(dev, LeakageChecker(held_out or []))
+
+    _write_jsonl(out / "train.jsonl", [p.to_json() for p in train_kept])
+    _write_jsonl(out / "dev.jsonl", [p.to_json() for p in dev_kept])
+    _write_jsonl(out / "test_dial2msa_glf.jsonl", test)
+    _write_jsonl(out / "rejected.jsonl", train_rejected + dev_rejected)
+
+    stats = {
+        "train": {c: sum(p.corpus == c for p in train_kept) for c in LICENCES},
+        "dev": len(dev_kept),
+        "test_dial2msa_glf": len(test),
+        "rejected": {
+            "guard": sum(r["reason"].startswith("guard") for r in train_rejected + dev_rejected),
+            "overlap": sum(r["reason"].startswith("overlaps") for r in train_rejected + dev_rejected),
+        },
+        "held_out_questions": len(held_out or []),
+    }
+    (out / "stats.json").write_text(json.dumps(stats, indent=2), encoding="utf-8")
+    return stats

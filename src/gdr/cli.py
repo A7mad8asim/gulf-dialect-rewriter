@@ -1,13 +1,35 @@
-"""Command line: gdr check-leakage | guard."""
+"""Command line: gdr fetch | check-leakage | guard."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from .guard import check
 from .leakage import LeakageChecker, load_questions
+
+# ask-the-data's gold set, when the two projects sit side by side (Desktop\Ask-the-Data)
+DEFAULT_HELD_OUT = Path(__file__).resolve().parents[3] / "Ask-the-Data" / "eval" / "gold.jsonl"
+
+
+def _fetch(args: argparse.Namespace) -> int:
+    from .data import fetch
+
+    held_out_path = Path(args.held_out) if args.held_out else DEFAULT_HELD_OUT
+    if held_out_path.exists():
+        held_out = load_questions(held_out_path)
+        print(f"Held-out questions: {len(held_out)} from {held_out_path}")
+    elif args.held_out:
+        print(f"Not found: {held_out_path}", file=sys.stderr)
+        return 1
+    else:
+        held_out = []
+        print(f"Warning: {held_out_path} not found; training pairs are not checked against ask-the-data's questions")
+    stats = fetch(Path(args.data_dir), held_out, refresh=args.refresh)
+    print(json.dumps(stats, indent=2))
+    return 0
 
 
 def _check_leakage(args: argparse.Namespace) -> int:
@@ -36,6 +58,12 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(prog="gdr", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p = sub.add_parser("fetch", help="download the corpora and write train/dev/test pairs under data/pairs")
+    p.add_argument("--data-dir", default="data")
+    p.add_argument("--held-out", help=f"JSONL with a 'question' field (default: {DEFAULT_HELD_OUT})")
+    p.add_argument("--refresh", action="store_true", help="download again even if cached")
+    p.set_defaults(func=_fetch)
 
     p = sub.add_parser("check-leakage", help="drop training pairs that overlap held-out questions")
     p.add_argument("pairs", help="training pairs, JSONL with 'source' and 'target'")
