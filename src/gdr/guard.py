@@ -12,7 +12,10 @@ from dataclasses import dataclass, field
 
 from .text import latin_terms, numbers_in, normalize
 
-MAX_LENGTH_RATIO = 2.0  # a rewrite more than twice as long as the question is treated as a runaway generation
+# A rewrite more than twice as long as the question, plus some slack, is treated as a runaway generation.
+# The slack matters for short questions: كم واحد عنده ضغط؟ becomes كم عدد مرضى ارتفاع ضغط الدم المسجلين؟
+MAX_LENGTH_RATIO = 2.0
+LENGTH_SLACK = 40
 
 
 @dataclass
@@ -31,7 +34,7 @@ def check(question: str, rewrite: str) -> GuardResult:
     reasons = []
     if not normalize(rewrite):
         reasons.append("empty rewrite")
-    elif len(rewrite) > MAX_LENGTH_RATIO * max(len(question), 1):
+    elif len(rewrite) > MAX_LENGTH_RATIO * len(question) + LENGTH_SLACK:
         reasons.append("rewrite much longer than the question")
 
     lost, added = _diff(numbers_in(question), numbers_in(rewrite))

@@ -1,4 +1,4 @@
-"""Command line: gdr fetch | check-leakage | guard."""
+"""Command line: gdr fetch | clinic | check-leakage | guard."""
 
 from __future__ import annotations
 
@@ -14,21 +14,37 @@ from .leakage import LeakageChecker, load_questions
 DEFAULT_HELD_OUT = Path(__file__).resolve().parents[3] / "Ask-the-Data" / "eval" / "gold.jsonl"
 
 
+def _held_out(args: argparse.Namespace) -> list[str] | None:
+    """ask-the-data's questions, [] with a warning when the default path is missing, None on a bad --held-out."""
+    path = Path(args.held_out) if args.held_out else DEFAULT_HELD_OUT
+    if path.exists():
+        questions = load_questions(path)
+        print(f"Held-out questions: {len(questions)} from {path}")
+        return questions
+    if args.held_out:
+        print(f"Not found: {path}", file=sys.stderr)
+        return None
+    print(f"Warning: {path} not found; pairs are not checked against ask-the-data's questions")
+    return []
+
+
 def _fetch(args: argparse.Namespace) -> int:
     from .data import fetch
 
-    held_out_path = Path(args.held_out) if args.held_out else DEFAULT_HELD_OUT
-    if held_out_path.exists():
-        held_out = load_questions(held_out_path)
-        print(f"Held-out questions: {len(held_out)} from {held_out_path}")
-    elif args.held_out:
-        print(f"Not found: {held_out_path}", file=sys.stderr)
+    held_out = _held_out(args)
+    if held_out is None:
         return 1
-    else:
-        held_out = []
-        print(f"Warning: {held_out_path} not found; training pairs are not checked against ask-the-data's questions")
-    stats = fetch(Path(args.data_dir), held_out, refresh=args.refresh)
-    print(json.dumps(stats, indent=2))
+    print(json.dumps(fetch(Path(args.data_dir), held_out, refresh=args.refresh), indent=2))
+    return 0
+
+
+def _clinic(args: argparse.Namespace) -> int:
+    from .data import build_clinic
+
+    held_out = _held_out(args)
+    if held_out is None:
+        return 1
+    print(json.dumps(build_clinic(Path(args.data_dir), held_out, args.n, args.seed), indent=2, ensure_ascii=False))
     return 0
 
 
@@ -64,6 +80,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--held-out", help=f"JSONL with a 'question' field (default: {DEFAULT_HELD_OUT})")
     p.add_argument("--refresh", action="store_true", help="download again even if cached")
     p.set_defaults(func=_fetch)
+
+    p = sub.add_parser("clinic", help="generate clinic-question pairs into data/pairs/clinic_*.jsonl")
+    p.add_argument("--n", type=int, default=3000)
+    p.add_argument("--seed", type=int, default=13)
+    p.add_argument("--data-dir", default="data")
+    p.add_argument("--held-out", help=f"JSONL with a 'question' field (default: {DEFAULT_HELD_OUT})")
+    p.set_defaults(func=_clinic)
 
     p = sub.add_parser("check-leakage", help="drop training pairs that overlap held-out questions")
     p.add_argument("pairs", help="training pairs, JSONL with 'source' and 'target'")
