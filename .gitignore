@@ -20,3 +20,5 @@ wandb/
 eval/results/*
 !eval/results/latest.json
 !eval/results/ablation.md
+!eval/results/extrinsic_*.json
+*.log

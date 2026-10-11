@@ -17,12 +17,29 @@ A small open model, fine-tuned with LoRA/QLoRA, that rewrites Gulf-dialect Arabi
 ## Plan
 
 1. **Data.** Public Gulf-dialect ↔ MSA parallel text (see [Data](#data)), fetched by `gdr fetch` and never committed, plus clinic-domain pairs from a seeded generator (`gdr clinic`). Every pair goes through the leakage check ([`leakage.py`](src/gdr/leakage.py)) against ask-the-data's gold set, so no test question (or a near-duplicate of one) reaches training.
-2. **Baselines.** No rewrite, a prompted (not fine-tuned) base model, and the fine-tuned model, all through the same guard.
+2. **Baselines.** No rewrite, a prompted (not fine-tuned) base model (done, [below](#baseline-prompted-qwen3-8b-not-fine-tuned)), and the fine-tuned model, all through the same guard.
 3. **Fine-tuning.** QLoRA on a small Qwen model on one RTX 5060 Ti (16 GB).
 4. **Evaluation.**
    - Intrinsic: chrF / BLEU against reference MSA on a held-out split, plus the guard's rejection rate.
    - Extrinsic: ask-the-data's accuracy on its 19 Gulf-dialect questions before and after, and on the MSA questions to check nothing gets worse.
 5. **Release.** Adapter weights and a model card on Hugging Face, a dataset card for the processed pairs (where the source licences allow), linked from here.
+
+## Baseline: prompted Qwen3-8B, not fine-tuned
+
+Ask-the-Data's 19 Gulf-dialect questions, each run 3 times through its full pipeline (Qwen3-8B writes the SQL). In the rewrite arm, the same Qwen3-8B first rewrites each question into MSA with a fixed prompt ([`rewrite.py`](src/gdr/rewrite.py)), behind the guard. Measured on 11 Oct 2026 with [`eval/extrinsic.py`](eval/extrinsic.py):
+
+| Arm | Correct (each of 3 runs) | Accuracy |
+|---|---|---|
+| No rewrite | 11 · 11 · 11 | 57.9% |
+| Prompted Qwen3-8B rewrite | 11 · 11 · 11 | 57.9% |
+
+The rewrite fixes 2 questions and breaks 2, so the net effect is zero. The guard rejected none of the 19 rewrites, and a rewrite takes about 0.5 s.
+
+- **Fixed:** G12 (انحجز فيها أكثر شي → أكبر عدد من المواعيد) and G28 (انحجز عن طريق التطبيق).
+- **Broken:** G26 changes the meaning. مريض ضغط ("hypertension patient") became المرضى الذين تم تسجيل ضغطهم ("patients whose blood pressure was recorded"). The guard can't catch this, because no number or term changed. G31's rewrite is faithful (كم معدل → ما هو معدل), but the SQL model then got it wrong.
+- **Room to improve:** 8 questions fail without a rewrite. The English twins of G06 and G45 fail as well, so dialect isn't their problem. That leaves 6 failures a better rewriter could fix: G12, G14, G28, G36, G39, G48. The prompted model fixed 2 of them.
+
+The no-rewrite arm scores 57.9% (11 of 19), against the 63.2% (12 of 19) in Ask-the-Data's README from 7 Oct. G28 was right then and is wrong now. The 3 runs here were identical, but single questions still move between days, so compare arms on paired runs, as here.
 
 ## Data
 
