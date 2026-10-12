@@ -1,0 +1,571 @@
+{
+  "run": {
+    "timestamp": "2026-10-12T20:44:43",
+    "subset": "msa",
+    "n_questions": 31,
+    "repeats": 3,
+    "rewriter": "adapter:qwen3-1.7b-v2",
+    "text_to_sql": "ask-the-data full pipeline, ollama:qwen3:8b"
+  },
+  "summary": {
+    "none": {
+      "correct_per_run": [
+        24,
+        24,
+        24
+      ],
+      "mean_accuracy": 0.7742
+    },
+    "rewrite": {
+      "correct_per_run": [
+        21,
+        21,
+        21
+      ],
+      "mean_accuracy": 0.6774
+    }
+  },
+  "guard_rejected": 1,
+  "rewrite_latency_median_s": 1.38,
+  "questions_better_with_rewrite": [
+    "G30-ar"
+  ],
+  "questions_worse_with_rewrite": [
+    "G11-ar",
+    "G32-ar",
+    "G41-ar",
+    "G44-ar"
+  ],
+  "items": [
+    {
+      "id": "G01-ar",
+      "question": "كم عدد المرضى المسجلين في الشبكة؟",
+      "rewrite": "كم عدد المرضى المسجلين في الشبكة؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G03-ar",
+      "question": "ما هي نسبة عدم الحضور الإجمالية في عام 2025؟",
+      "rewrite": "ما نسبة عدم الحضور إلى المواعيد في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G05-ar",
+      "question": "كم كان متوسط وقت الانتظار بالدقائق في كل قسم خلال 2025؟",
+      "rewrite": "ما متوسط وقت الانتظار بالدقائق حسب القسم خلال عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G07-ar",
+      "question": "كم عدد الفحوصات التي أُجريت من كل نوع في عام 2025؟",
+      "rewrite": "كم عدد الفحوصات التي أُجريت من كل نوع في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G08-ar",
+      "question": "ما نسبة فحوصات ضغط الدم في 2024 التي كانت نتيجتها غير طبيعية؟",
+      "rewrite": "ما نسبة النتائج غير الطبيعية في فحوصات ضغط الدم في عام 2024؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G10-ar",
+      "question": "ما متوسط قيمة السكر التراكمي (HbA1c) المسجلة في 2025؟",
+      "rewrite": "ما متوسط قيمة السكر التراكمي (HbA1c) المسجلة في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G11-ar",
+      "question": "كم متابعة كانت مستحقة في 2025، وكم منها اكتمل؟",
+      "rewrite": "كم عدد المتابعات التي أُكملت في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G13-ar",
+      "question": "كم عدد وصفات الستاتين التي صُرفت في 2024؟",
+      "rewrite": "كم عدد وصفات الستاتين التي صُرفت في عام 2024؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G15-ar",
+      "question": "كم عدد الزيارات في عطلة نهاية الأسبوع (الجمعة والسبت) خلال 2025؟",
+      "rewrite": "كم عدد الزيارات في عطلة نهاية الأسبوع (الجمعة والسبت) خلال عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G16-ar",
+      "question": "ما نسبة عدم الحضور في كل عيادة خلال 2025؟",
+      "rewrite": "ما نسبة عدم الحضور إلى المواعيد خلال عام 2025 حسب العيادة؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G18-ar",
+      "question": "كم عدد مرضى السكري في كل مجموعة جنسية؟",
+      "rewrite": "كم عدد مرضى السكري في كل مجموعة جنسية؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G20-ar",
+      "question": "كم كان متوسط وقت الانتظار في كل عيادة خلال 2025؟",
+      "rewrite": "ما متوسط وقت الانتظار بالدقائق حسب العيادة خلال عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G21-ar",
+      "question": "ما نسبة إكمال المتابعات لكل مجموعة جنسية، للمتابعات المستحقة في 2025؟",
+      "rewrite": "ما نسبة إكمال المتابعات لكل مجموعة جنسية، للمتابعات المستحقة في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G23-ar",
+      "question": "كم عدد الزيارات في كل شهر من 2024؟",
+      "rewrite": "كم عدد الزيارات في كل شهر من 2024؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G24-ar",
+      "question": "ما نسبة عدم الحضور لكل فئة عمرية في 2025؟",
+      "rewrite": "ما نسبة عدم الحضور إلى المواعيد في عام 2025 حسب الفئة العمرية؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G25-ar",
+      "question": "ما هي أكثر 3 تشخيصات شيوعاً في 2025؟ اعرض رمز ICD-10 والوصف وعدد التشخيصات.",
+      "rewrite": "ما هي أكثر 3 تشخيصات شيوعاً في عام 2025؟ اعرض رمز ICD-10 والوصف وعدد التشخيصات.",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G27-ar",
+      "question": "ما نسبة النتائج غير الطبيعية في فحص السكري في 2024 لكل مجموعة جنسية؟",
+      "rewrite": "ما نسبة النتائج غير الطبيعية في فحص السكري في عام 2024 حسب الجنسية؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G29-ar",
+      "question": "ما متوسط المدة بالأيام بين الحجز والموعد لكل طريقة حجز؟",
+      "rewrite": "ما متوسط المدة بالأيام بين الحجز والموعد حسب طريقة الحجز؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G30-ar",
+      "question": "كم متابعة مستحقة في الربع الأخير في عيادة المنطقة الصناعية لم تكتمل بعد؟",
+      "rewrite": "كم عدد المتابعات التي لم تكتمل بعد في عيادة المنطقة الصناعية في الربع الأخير من العام؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G32-ar",
+      "question": "كم عدد الزيارات في كل قسم خلال رمضان 2024؟",
+      "rewrite": "كم عدد الزيارات في قسم الطب العام خلال شهر رمضان 2024؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G34-ar",
+      "question": "كم مريضاً جديداً سُجّل في كل سنة من 2023 إلى 2025؟",
+      "rewrite": "كم عدد المرضى الجدد الذين سُجلوا بين عامي 2023 و2025 حسب السنة؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G35-ar",
+      "question": "كم وصفة مضاد حيوي صُرفت في زيارات طب الأطفال خلال 2025؟",
+      "rewrite": "كم عدد وصفات المضادات الحيوية في قسم طب الأطفال في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G37-ar",
+      "question": "لكل عيادة تسجيل، ما نسبة مرضى السكري الذين أجروا تحليل HbA1c في 2025 وكانت آخر نتيجة لهم أعلى من 9؟",
+      "rewrite": "من نسبة المرضى الذين أجروا تحليل HbA1c في عيادة ما، ما نسبة المرضى الذين كان آخر نتيجة لهم أعلى من 9 في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G38-ar",
+      "question": "ما متوسط السكر التراكمي لمرضى السكري في كل سنة من 2023 إلى 2025؟",
+      "rewrite": "ما متوسط السكر التراكمي لمرضى السكري من عام 2023 إلى عام 2025 حسب السنة؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G40-ar",
+      "question": "ما نسبة المتابعات المستحقة في 2025 التي اكتملت في وقتها، أي خلال 14 يوماً من تاريخ الاستحقاق؟",
+      "rewrite": "ما نسبة إكمال المتابعات المستحقة في 2025 في موعدها، أي خلال 14 يومًا من تاريخ الاستحقاق؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G41-ar",
+      "question": "في 2025، كم كان متوسط عدد الزيارات لكل مريض في كل مجموعة جنسية، مع احتساب المرضى الذين زاروا مرة واحدة على الأقل فقط؟",
+      "rewrite": "ما متوسط عدد الزيارات في عام 2025 حسب الجنسية؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G43-ar",
+      "question": "ما نسبة المرضى في الفئة العمرية 60+ الذين زاروا العيادة مرة واحدة على الأقل في 2025؟",
+      "rewrite": "ما نسبة المرضى الذين حضروا العيادة لأول مرة في فئة 60+ في عام 2025؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G44-ar",
+      "question": "ما نسبة التغير في عدد الزيارات في كل عيادة من 2024 إلى 2025؟",
+      "rewrite": "ما نسبة التغير في عدد الزيارات في عام 2025 حسب العيادة من عام 2024؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G46-ar",
+      "question": "ما هو الوسيط لوقت الانتظار في كل قسم خلال 2025؟",
+      "rewrite": "ما هو الوسيط لوقت الانتظار في عام 2025 حسب القسم؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        true,
+        true,
+        true
+      ],
+      "correct_rewrite": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "G47-ar",
+      "question": "ما نسبة النساء بعمر 50 سنة فأكثر (الفئتان 50-59 و60+) اللاتي أجرين فحص سرطان الثدي في 2024 أو 2025؟",
+      "rewrite": "ما نسبة النتائج negative في فحوصات سرطان الثدي للنساء بين عام 50-59 و60+ في عام 2024 أو 2025؟",
+      "guard_accepted": false,
+      "guard_reasons": [
+        "numbers lost: 50",
+        "terms added: negative"
+      ],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "G49-ar",
+      "question": "ما متوسط وقت الانتظار للزيارات في رمضان 2025 التي بدأ موعدها الساعة 7 مساءً أو بعدها؟",
+      "rewrite": "ما متوسط وقت الانتظار للزيارات في شهر رمضان 2025 بعد الساعة 7 مساءً أو بعدها؟",
+      "guard_accepted": true,
+      "guard_reasons": [],
+      "correct_none": [
+        false,
+        false,
+        false
+      ],
+      "correct_rewrite": [
+        false,
+        false,
+        false
+      ]
+    }
+  ]
+}

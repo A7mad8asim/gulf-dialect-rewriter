@@ -17,6 +17,8 @@ train = [
   "accelerate>=1.5",
   "bitsandbytes>=0.45",
 ]
+# BLEU / chrF++ for eval/intrinsic.py
+eval = ["sacrebleu>=2.4"]
 dev = ["pytest>=8"]
 
 [project.scripts]

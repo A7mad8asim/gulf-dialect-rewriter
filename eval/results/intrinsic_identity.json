@@ -1,0 +1,12 @@
+{
+  "rewriter": "identity",
+  "n": 2000,
+  "bleu": 16.32,
+  "chrf++": 43.54,
+  "published": {
+    "AraT5 (Khered et al. 2025)": {
+      "bleu": 53.96,
+      "chrf++": 70.86
+    }
+  }
+}

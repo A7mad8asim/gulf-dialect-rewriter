@@ -115,12 +115,18 @@ class AdapterRewriter:
     rewrite = OllamaRewriter.rewrite
 
 
-def rewrite_file(rewriter, in_path: str, out_path: str, dialect_only: bool = False) -> list[dict]:
-    """Rewrite every question of a JSONL file (id, question); writes id, question, rewrite, latency."""
+SUBSETS = {  # which questions of a file to rewrite (ask-the-data's gold set mixes English, MSA and dialect)
+    "all": lambda i: True,
+    "arabic": lambda i: i.get("lang", "ar") == "ar",
+    "dialect": lambda i: i.get("lang", "ar") == "ar" and bool(i.get("dialect")),
+    "msa": lambda i: i.get("lang", "ar") == "ar" and not i.get("dialect"),
+}
+
+
+def rewrite_file(rewriter, in_path: str, out_path: str, subset: str = "all") -> list[dict]:
+    """Rewrite the questions of a JSONL file (id, question); writes id, question, rewrite, latency."""
     with open(in_path, encoding="utf-8") as f:
-        items = [json.loads(line) for line in f if line.strip()]
-    if dialect_only:
-        items = [i for i in items if i.get("lang", "ar") == "ar" and i.get("dialect")]
+        items = [i for i in (json.loads(line) for line in f if line.strip()) if SUBSETS[subset](i)]
     rows = []
     for i in items:
         r = rewriter.rewrite(i["question"])

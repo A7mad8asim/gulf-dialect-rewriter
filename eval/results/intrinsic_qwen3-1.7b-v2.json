@@ -1,0 +1,18 @@
+{
+  "rewriter": "qwen3-1.7b-v2",
+  "n": 2000,
+  "bleu": 39.98,
+  "chrf++": 62.27,
+  "guard_rejected": 12,
+  "with_guard": {
+    "bleu": 40.41,
+    "chrf++": 62.35
+  },
+  "seconds_per_tweet": 1.327,
+  "published": {
+    "AraT5 (Khered et al. 2025)": {
+      "bleu": 53.96,
+      "chrf++": 70.86
+    }
+  }
+}

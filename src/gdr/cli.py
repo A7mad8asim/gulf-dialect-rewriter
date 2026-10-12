@@ -64,7 +64,7 @@ def _rewrite_file(args: argparse.Namespace) -> int:
     from .rewrite import AdapterRewriter, OllamaRewriter, rewrite_file
 
     rewriter = AdapterRewriter(args.adapter) if args.adapter else OllamaRewriter(args.ollama_model)
-    rows = rewrite_file(rewriter, args.questions, args.out, dialect_only=args.dialect_only)
+    rows = rewrite_file(rewriter, args.questions, args.out, subset=args.subset)
     print(f"{len(rows)} rewrites by {rewriter.name} -> {args.out}")
     return 0
 
@@ -126,7 +126,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", required=True)
     p.add_argument("--adapter", help="outputs/<run>/adapter from gdr train")
     p.add_argument("--ollama-model", default="qwen3:8b", help="used when no --adapter is given")
-    p.add_argument("--dialect-only", action="store_true", help="keep only Arabic questions marked as dialect")
+    p.add_argument("--subset", choices=["all", "arabic", "dialect", "msa"], default="all", help="which questions to rewrite")
     p.set_defaults(func=_rewrite_file)
 
     p = sub.add_parser("check-leakage", help="drop training pairs that overlap held-out questions")

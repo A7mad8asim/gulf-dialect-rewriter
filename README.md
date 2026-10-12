@@ -4,7 +4,27 @@
 
 A small open model, fine-tuned with LoRA/QLoRA, that rewrites Gulf-dialect Arabic questions into Modern Standard Arabic (MSA), placed in front of a text-to-SQL assistant to close its dialect gap.
 
-> **Status: in progress.** Ask-the-Data answers the 25 fresh Gulf-dialect questions correctly 44% of the time as asked, 60% with the fine-tuned Qwen3-1.7B rewriter in front, and 76% with a hand-written MSA version of each question. On its own 19 dialect questions, accuracy goes from 57.9% to 68.4%. The fresh set is no longer fully independent of the training data (see [Fine-tuned models](#fine-tuned-models-qwen3-17b-qlora)), so a new held-out set is still to come.
+## Results
+
+| ask-the-data accuracy (3 runs per arm) | As asked | With the v2 rewriter | Hand-written MSA |
+|---|---|---|---|
+| Fresh 25 Gulf-dialect questions | 44.0% | **60.0%** | 76.0% |
+| Its own 19 Gulf-dialect questions | 57.9% | **68.4%** | n/a |
+| Its 31 MSA Arabic questions | **77.4%** | 67.7% | n/a |
+
+The fine-tuned Qwen3-1.7B rewriter closes much of the dialect gap. It also damages questions that are already in MSA, so it belongs behind a dialect check, not in front of every Arabic question:
+
+| All 50 Arabic questions in ask-the-data's gold set | Correct |
+|---|---|
+| No rewriter | 35 (70%) |
+| Rewrite every Arabic question | 34 (68%) |
+| Rewrite only the dialect questions (labels from the gold set) | **37 (74%)** |
+
+The last row uses the gold set's own dialect labels. A real system would need a dialect classifier, which isn't built yet.
+
+On the standard Dial2MSA-Verified Gulf test (2,000 tweets, 3 references), the rewriter scores **40.0 BLEU / 62.3 chrF++**. Copying the tweet unchanged scores 16.3 / 43.5, and the published AraT5 model scores 54.0 / 70.9.
+
+Two caveats. The fresh set shares topics with the expanded training generator, so 60% is optimistic. And differences of 1–2 questions are noise. Both are explained [below](#fine-tuned-models-qwen3-17b-qlora).
 
 ## The question
 
@@ -14,15 +34,14 @@ A small open model, fine-tuned with LoRA/QLoRA, that rewrites Gulf-dialect Arabi
 
 **The rewriter may change wording, never content.** Every number and Latin-script term (years, thresholds, HbA1c, BMI ...) must survive the rewrite unchanged, and none may be added. A rewrite that breaks the rule is discarded and the original question is used. This is enforced in code ([`guard.py`](src/gdr/guard.py)) and tested, not only asked for in a prompt.
 
-## Plan
+## How it was built
 
-1. **Data.** Public Gulf-dialect ↔ MSA parallel text (see [Data](#data)), fetched by `gdr fetch` and never committed, plus clinic-domain pairs from a seeded generator (`gdr clinic`). Every pair goes through the leakage check ([`leakage.py`](src/gdr/leakage.py)) against ask-the-data's gold set, so no test question (or a near-duplicate of one) reaches training.
-2. **Baselines.** No rewrite, a prompted (not fine-tuned) base model, a hand-written MSA reference as the ceiling, and the fine-tuned model, all through the same guard. Results: [fine-tuned models](#fine-tuned-models-qwen3-17b-qlora), [prompted baseline](#baseline-prompted-qwen3-8b-not-fine-tuned), [fresh 25](#fresh-dialect-test-set).
-3. **Fine-tuning.** QLoRA on a small Qwen model on one RTX 5060 Ti (16 GB).
-4. **Evaluation.**
-   - Intrinsic: chrF / BLEU against reference MSA on a held-out split, plus the guard's rejection rate.
-   - Extrinsic: ask-the-data's accuracy on its 19 Gulf-dialect questions before and after, and on the MSA questions to check nothing gets worse.
-5. **Release.** Adapter weights and a model card on Hugging Face, a dataset card for the processed pairs (where the source licences allow), linked from here.
+1. **Data** ([below](#data)): human-verified Gulf ↔ MSA tweets (Dial2MSA-Verified, research only) and Saudi translations (Arabic STS, CC BY 4.0), fetched by `gdr fetch` and never committed. Added to these are clinic questions from a seeded generator (`gdr clinic`). Every pair passes the guard and a leakage check against the test questions ([`leakage.py`](src/gdr/leakage.py)).
+2. **Baselines:** no rewrite, a prompted (not fine-tuned) Qwen3-8B, and a hand-written MSA reference as the ceiling, all through the same guard.
+3. **Fine-tuning:** 4-bit QLoRA on Qwen3-1.7B on one RTX 5060 Ti (16 GB), with `gdr train`.
+4. **Evaluation:**
+   - **End to end:** ask-the-data's accuracy before and after, on its dialect and MSA questions and on a fresh dialect set (`eval/extrinsic.py`).
+   - **Intrinsic:** BLEU / chrF++ on the Dial2MSA test (`eval/intrinsic.py`).
 
 ## Fine-tuned models: Qwen3-1.7B, QLoRA
 
@@ -49,6 +68,13 @@ A small open model, fine-tuned with LoRA/QLoRA, that rewrites Gulf-dialect Arabi
 - **Caveat on the fresh-set gain:** the generator was expanded after the fresh set exposed v1's gaps. It was expanded from the schema rather than from the questions, and near-copies of the fresh questions were dropped (57). Still, the fresh set now shares topics with the training data, so 60% is optimistic.
 - **ask-the-data's 19:** v2 still fixes G12 and G28 and breaks none. G14's rewrite put the English word "negative" into the question. The guard rejected it, because a Latin-script term was added, and the original question went through, which ask-the-data still gets wrong. v1 had fixed G14, so the guard did its job but v2 is one question weaker here (13 vs 14, within noise).
 - **Noise:** the reference arm scored 18 one day and 19 the next with identical text. Treat differences of 1–2 questions as noise and read the per-question tables in `eval/results/`.
+
+**MSA questions (harm check):** the rewriter should leave MSA alone; about 10% of its training pairs are MSA → MSA. Yet it left only 4 of ask-the-data's 31 MSA questions unchanged, with 1 rewrite rejected by the guard. It broke 4 and fixed 1, and the breaks are meaning changes:
+- G32: "in each department" became "in General Practice".
+- G11: "how many were due, and how many of those were completed" lost its first half.
+- G41: "average visits per patient, counting only patients who visited" became "average visits".
+
+**Intrinsic (`eval/intrinsic.py`):** on the 2,000 Dial2MSA-Verified Gulf test tweets, scored against all 3 references, the model reaches 40.0 BLEU / 62.3 chrF++. With the guard, which rejected 12 rewrites, it reaches 40.4 / 62.4. Copying the tweet unchanged scores 16.3 / 43.5, and AraT5 in Khered et al. (2025) scores 54.0 / 70.9. That model is a dedicated seq2seq model trained on more dialect data (MADAR, PADIC, Emi-NADI), while this one spends part of its training on clinic questions. Generation took 1.3 s per tweet on the GPU.
 
 What would make the claim solid: a new held-out dialect set written without looking at the generator (ideally by a native speaker), a check that catches meaning changes and not only lost numbers (v2's remaining errors swap clinic terms), and the 8B base.
 
@@ -146,6 +172,21 @@ gdr guard "كم مريض سكري عندنا فوق 60 سنة؟" "كم عدد م
 gdr check-leakage data/pairs.jsonl --held-out ../Ask-the-Data/eval/gold.jsonl --out data/pairs.clean.jsonl
 ```
 
+Evaluating an adapter (rewrites are written here, then scored with ask-the-data's Python):
+
+```bash
+gdr rewrite-file eval/fresh_dialect.jsonl --adapter outputs/qwen3-1.7b-v2/adapter --out eval/results/rewrites_fresh.json
+..\Ask-the-Data\.venv\Scripts\python eval\extrinsic.py --gold eval/fresh_dialect.jsonl --rewrites eval/results/rewrites_fresh.json
+gdr rewrite-file ../Ask-the-Data/eval/gold.jsonl --subset msa --adapter outputs/qwen3-1.7b-v2/adapter --out eval/results/rewrites_msa.json
+pip install -e ".[eval]" && python eval/intrinsic.py outputs/qwen3-1.7b-v2/adapter
+```
+
 ## Limits
 
-To be filled in with measured results.
+- **Small test sets:** 19 and 25 dialect questions, and 31 MSA ones. Paired runs repeat exactly within an arm, but identical text can flip between arms. Differences of 1–2 questions are noise.
+- **The fresh set is not independent:** Claude wrote the 25 fresh questions, then expanded the generator after they exposed v1's gaps. The expansion came from the schema, and near-copies were dropped, but 60% is still optimistic. A new set written without seeing the generator, ideally by a native speaker, is the real test.
+- **Meaning changes get through:** the guard stops lost or added numbers and Latin terms, but not swapped clinic terms. Examples: antibiotics → painkillers, attendance → cancellations, "each department" → "General Practice".
+- **MSA questions get hurt:** in front of every Arabic question the rewriter costs more than it gains. It needs a dialect check first, and the 74% above assumes a perfect one.
+- **Below the published baseline:** on Dial2MSA, 40.0 BLEU / 62.3 chrF++ against AraT5's 54.0 / 70.9.
+- **Licences:** Dial2MSA-Verified is research-only, so the adapter trained on it is research-only too and isn't published. The data is never redistributed. `gdr train --open-only` trains on the CC BY and generated pairs alone.
+- **One machine:** everything was run on one Windows PC with an RTX 5060 Ti. TRL's SFT trainer was replaced by the plain transformers `Trainer`, because TRL needs Triton, which Windows lacks.
