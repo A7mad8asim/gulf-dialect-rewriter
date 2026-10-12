@@ -24,3 +24,5 @@ eval/results/*
 *.log
 !eval/results/rewrites_*.json
 !eval/results/intrinsic_*.json
+# Rewrites of Dial2MSA test tweets stay local: they nearly reproduce research-only data
+eval/results/intrinsic_rewrites_*.json

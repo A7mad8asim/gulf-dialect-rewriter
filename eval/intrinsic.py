@@ -4,9 +4,10 @@
     .venv\\Scripts\\python eval\\intrinsic.py --identity          # copy the tweet unchanged: the floor
 
 Scored with sacrebleu against all three references, as Khered et al. (WACL 2025) report it, so the
-numbers are comparable with their AraT5 results. Rewrites and scores go to eval/results/. Needs the
-train and eval extras and `gdr fetch` (the test tweets are research-only and never committed; the
-saved rewrites contain model output only).
+numbers are comparable with their AraT5 results. Scores go to eval/results/intrinsic_<name>.json
+(committed); the rewrites go to eval/results/intrinsic_rewrites_<name>.json, which is git-ignored
+because rewrites of the research-only test tweets nearly reproduce them. Needs the train and eval
+extras and `gdr fetch`.
 """
 
 from __future__ import annotations
