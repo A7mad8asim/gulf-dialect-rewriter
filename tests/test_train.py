@@ -3,7 +3,7 @@ import json
 import pytest
 
 from gdr.rewrite import SYSTEM_PROMPT
-from gdr.train import collate, corpus_counts, encode, load_pairs, messages
+from gdr.train import corpus_counts, encode, load_pairs, messages, pad_batch
 
 
 class FakeTokenizer:
@@ -43,11 +43,12 @@ def test_too_long_pairs_are_dropped_not_cut():
     assert encode(FakeTokenizer(), {"source": "وش", "target": "ما"}, max_length=5) is None
 
 
-def test_collate_pads_inputs_labels_and_mask():
-    batch = collate([{"input_ids": [1, 2, 3], "labels": [-100, 2, 3]}, {"input_ids": [4], "labels": [4]}], pad_id=0)
-    assert batch["input_ids"].tolist() == [[1, 2, 3], [4, 0, 0]]
-    assert batch["labels"].tolist() == [[-100, 2, 3], [4, -100, -100]]
-    assert batch["attention_mask"].tolist() == [[1, 1, 1], [1, 0, 0]]
+def test_padding_of_inputs_labels_and_mask():
+    # pure Python, so CI runs it without PyTorch; collate() only turns these lists into tensors
+    batch = pad_batch([{"input_ids": [1, 2, 3], "labels": [-100, 2, 3]}, {"input_ids": [4], "labels": [4]}], pad_id=0)
+    assert batch["input_ids"] == [[1, 2, 3], [4, 0, 0]]
+    assert batch["labels"] == [[-100, 2, 3], [4, -100, -100]]
+    assert batch["attention_mask"] == [[1, 1, 1], [1, 0, 0]]
 
 
 def test_open_only_drops_research_only_pairs(tmp_path):

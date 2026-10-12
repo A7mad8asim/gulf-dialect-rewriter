@@ -88,16 +88,21 @@ def encode(tokenizer, pair: dict, max_length: int) -> dict | None:
     return {"input_ids": prompt + answer, "labels": [-100] * len(prompt) + answer}
 
 
-def collate(batch: list[dict], pad_id: int) -> dict:
-    import torch
-
+def pad_batch(batch: list[dict], pad_id: int) -> dict[str, list[list[int]]]:
+    """Right-pad a batch: pad tokens in the inputs, -100 in the labels, 0 in the attention mask."""
     width = max(len(b["input_ids"]) for b in batch)
     pad = lambda xs, v: xs + [v] * (width - len(xs))  # noqa: E731
     return {
-        "input_ids": torch.tensor([pad(b["input_ids"], pad_id) for b in batch]),
-        "labels": torch.tensor([pad(b["labels"], -100) for b in batch]),
-        "attention_mask": torch.tensor([pad([1] * len(b["input_ids"]), 0) for b in batch]),
+        "input_ids": [pad(b["input_ids"], pad_id) for b in batch],
+        "labels": [pad(b["labels"], -100) for b in batch],
+        "attention_mask": [pad([1] * len(b["input_ids"]), 0) for b in batch],
     }
+
+
+def collate(batch: list[dict], pad_id: int) -> dict:
+    import torch
+
+    return {k: torch.tensor(v) for k, v in pad_batch(batch, pad_id).items()}
 
 
 def corpus_counts(pairs: list[dict]) -> dict[str, int]:
