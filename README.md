@@ -4,7 +4,7 @@
 
 A small open model, fine-tuned with LoRA/QLoRA, that rewrites Gulf-dialect Arabic questions into Modern Standard Arabic (MSA), placed in front of a text-to-SQL assistant to close its dialect gap.
 
-> **Status: in progress.** No results yet. This README will lead with the measured before/after numbers once they exist.
+> **Status: in progress.** Ask-the-Data answers the 25 fresh Gulf-dialect questions correctly 44% of the time as asked, 60% with the fine-tuned Qwen3-1.7B rewriter in front, and 76% with a hand-written MSA version of each question. On its own 19 dialect questions, accuracy goes from 57.9% to 68.4%. The fresh set is no longer fully independent of the training data (see [Fine-tuned models](#fine-tuned-models-qwen3-17b-qlora)), so a new held-out set is still to come.
 
 ## The question
 
@@ -17,29 +17,40 @@ A small open model, fine-tuned with LoRA/QLoRA, that rewrites Gulf-dialect Arabi
 ## Plan
 
 1. **Data.** Public Gulf-dialect ↔ MSA parallel text (see [Data](#data)), fetched by `gdr fetch` and never committed, plus clinic-domain pairs from a seeded generator (`gdr clinic`). Every pair goes through the leakage check ([`leakage.py`](src/gdr/leakage.py)) against ask-the-data's gold set, so no test question (or a near-duplicate of one) reaches training.
-2. **Baselines.** No rewrite, a prompted (not fine-tuned) base model, a hand-written MSA reference as the ceiling, and the fine-tuned model, all through the same guard. Done so far: [ask-the-data's 19](#baseline-prompted-qwen3-8b-not-fine-tuned) and the [fresh 25](#fresh-dialect-test-set).
+2. **Baselines.** No rewrite, a prompted (not fine-tuned) base model, a hand-written MSA reference as the ceiling, and the fine-tuned model, all through the same guard. Results: [fine-tuned models](#fine-tuned-models-qwen3-17b-qlora), [prompted baseline](#baseline-prompted-qwen3-8b-not-fine-tuned), [fresh 25](#fresh-dialect-test-set).
 3. **Fine-tuning.** QLoRA on a small Qwen model on one RTX 5060 Ti (16 GB).
 4. **Evaluation.**
    - Intrinsic: chrF / BLEU against reference MSA on a held-out split, plus the guard's rejection rate.
    - Extrinsic: ask-the-data's accuracy on its 19 Gulf-dialect questions before and after, and on the MSA questions to check nothing gets worse.
 5. **Release.** Adapter weights and a model card on Hugging Face, a dataset card for the processed pairs (where the source licences allow), linked from here.
 
-## First fine-tuned model: Qwen3-1.7B, QLoRA
+## Fine-tuned models: Qwen3-1.7B, QLoRA
 
-`gdr train` defaults: 4-bit NF4 base, LoRA r=16 on all linear layers (17.4 M trainable parameters, 1% of the model), 2 epochs over 11,816 pairs (Dial2MSA + STS Saudi + clinic). Training took 47 minutes on the RTX 5060 Ti, peaking at 11.3 GB. Dev loss fell from 0.48 to 0.385 and flattened over the last epoch. The rewrites come from `gdr rewrite-file` and are scored with `eval/extrinsic.py --rewrites`, 3 runs per arm, on 12 Oct 2026:
+`gdr train` defaults: 4-bit NF4 base, LoRA r=16 on all linear layers (17.4 M trainable parameters, 1% of the model), 2 epochs, peak 11.3 GB on the RTX 5060 Ti. Rewrites come from `gdr rewrite-file` and are scored with `eval/extrinsic.py --rewrites`, 3 runs per arm.
 
-| Test set | No rewrite | Prompted Qwen3-8B | **Fine-tuned Qwen3-1.7B** | MSA reference |
-|---|---|---|---|---|
-| ask-the-data's 19 dialect questions | 57.9% | 57.9% | **73.7%** (+3, none lost) | n/a |
-| Fresh 25 dialect questions | 44.0% | 48.0% | **40.0%** (+4, −5) | 72–76% |
+- **v1** (11 Oct): 11,816 pairs (Dial2MSA + STS Saudi + 2,677 clinic pairs from 18 measures). 47 minutes; dev loss 0.48 → 0.385.
+- **v2** (12 Oct): 14,488 pairs, with the clinic generator expanded to 5,349 pairs from 33 measures. Dev loss 0.32 → 0.238, on a new dev set that includes the expanded clinic pairs. The run took 16 hours of wall-clock time, not about an hour, because the GPU was slow while it ran: each eval took 37–49 s against v1's 16 s. That is a slowdown on the machine, not a change in the code.
 
-**The fine-tuned model fixes clinic questions it was trained on, but it doesn't generalize yet.**
+| Test set | No rewrite | Prompted Qwen3-8B | Fine-tuned v1 | **Fine-tuned v2** | MSA reference |
+|---|---|---|---|---|---|
+| ask-the-data's 19 dialect questions | 57.9% | 57.9% | 73.7% | **68.4%** | n/a |
+| Fresh 25 dialect questions | 44.0% | 48.0% | 40.0% | **60.0%** | 72–76% |
 
-- **ask-the-data's 19 questions:** it fixes 3 of the 6 that a better rewrite could fix (G12, G14, G28) and breaks none. It also corrects the prompted model's G26 mistake: مريض ضغط → مرضى ارتفاع ضغط الدم. These questions are close to what the clinic generator produces, though: the generator draws on the same glossary, and Claude had seen the questions before writing it. So this result is optimistic.
-- **The fresh 25:** questions outside the generator's templates bring out confident meaning changes. Sunday became "weekend" (F01), asthma became "lung cancer" (F03), and "days of insulin supplied" became "days between visits" (F06). F05, F16 and F18 came out as nonsense. The guard rejected none of them, because no number or term changed. Net −1 is within noise, but the meaning changes are real.
-- **Noise:** the reference arm scored 18 one day and 19 the next with identical text, so judge arms on the per-question tables in `eval/results/` as well as on totals.
+**v2 recovers on the fresh set, but part of that gain comes from training data that now covers it.**
 
-What to try next: more varied clinic training questions (more measures, filters and wordings; done on 12 Oct, see [Data](#data)), the 8B base, which knows more Arabic, and a check that catches meaning changes and not only lost numbers.
+- **Fresh 25:** v2 fixes F05, F09, F11, F23 and F25, and loses F24, whose rewrite is faithful, so that loss is noise. v1's worst errors are gone: Sunday stays Sunday, asthma stays asthma, and insulin days supplied stays days supplied. Meaning changes remain, though:
+  - F20: antibiotics → painkillers.
+  - F19: attendance → cancellations.
+  - F17: waiting time → "cases of waiting".
+  - F18: "children vaccinated" → "patients who attended".
+  - F13: adds "in the booking department".
+
+  The guard catches none of these.
+- **Caveat on the fresh-set gain:** the generator was expanded after the fresh set exposed v1's gaps. It was expanded from the schema rather than from the questions, and near-copies of the fresh questions were dropped (57). Still, the fresh set now shares topics with the training data, so 60% is optimistic.
+- **ask-the-data's 19:** v2 still fixes G12 and G28 and breaks none. G14's rewrite put the English word "negative" into the question. The guard rejected it, because a Latin-script term was added, and the original question went through, which ask-the-data still gets wrong. v1 had fixed G14, so the guard did its job but v2 is one question weaker here (13 vs 14, within noise).
+- **Noise:** the reference arm scored 18 one day and 19 the next with identical text. Treat differences of 1–2 questions as noise and read the per-question tables in `eval/results/`.
+
+What would make the claim solid: a new held-out dialect set written without looking at the generator (ideally by a native speaker), a check that catches meaning changes and not only lost numbers (v2's remaining errors swap clinic terms), and the 8B base.
 
 ## Baseline: prompted Qwen3-8B, not fine-tuned
 
